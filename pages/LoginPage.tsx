@@ -1,10 +1,11 @@
 import { useState } from 'react'
 import { Clock, Eye, EyeOff, Shield, ArrowLeft, User, Zap } from 'lucide-react'
 import type { Employee } from '../types'
+import { authService } from '../services/authService'
 
 interface LoginPageProps {
   employees: Employee[]
-  onLoginSuccess: (employee: Employee) => void
+  onLoginSuccess: (employee: Employee, fromApi?: boolean) => void
   onBack: () => void
 }
 
@@ -19,27 +20,33 @@ export default function LoginPage({ employees, onLoginSuccess, onBack }: LoginPa
   const demoEmployee = employees.find((e) => e.profile === 'employee')
   const demoAdmin = employees.find((e) => e.profile === 'admin')
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
     setLoading(true)
 
-    setTimeout(() => {
-      const found = employees.find(
-        (emp) =>
-          emp.email.toLowerCase() === email.toLowerCase().trim() &&
-          emp.status
-      )
+    // Tenta login via API primeiro
+    try {
+      const { employee } = await authService.login(email.trim(), password)
+      onLoginSuccess(employee, true)
+      return
+    } catch {
+      // API indisponível ou credenciais inválidas na API — tenta modo local
+    }
 
-      if (!found || password !== '123456') {
-        setError('E-mail ou senha inválidos. Verifique suas credenciais.')
-        setLoading(false)
-        return
-      }
+    // Fallback: validação local (demo)
+    const found = employees.find(
+      (emp) => emp.email.toLowerCase() === email.toLowerCase().trim() && emp.status
+    )
 
+    if (!found || password !== '123456') {
+      setError('E-mail ou senha inválidos. Verifique suas credenciais.')
       setLoading(false)
-      onLoginSuccess(found)
-    }, 600)
+      return
+    }
+
+    setLoading(false)
+    onLoginSuccess(found, false)
   }
 
   const fillDemo = (emp: Employee) => {
