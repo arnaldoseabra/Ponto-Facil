@@ -1,0 +1,21 @@
+FROM php:8.4-fpm-alpine
+
+RUN apk add --no-cache \
+    bash \
+    curl \
+    libpng-dev \
+    libjpeg-turbo-dev \
+    libzip-dev \
+    oniguruma-dev \
+    zip \
+    unzip \
+    git
+
+RUN docker-php-ext-install pdo pdo_mysql mbstring exif pcntl bcmath gd zip
+
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+WORKDIR /var/www/html/backend
+
+EXPOSE 9000
+CMD ["php-fpm"]

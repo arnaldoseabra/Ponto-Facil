@@ -1,0 +1,123 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile.prod
+    container_name: ponto-facil-app
+    restart: unless-stopped
+    working_dir: /var/www/html/backend
+    volumes:
+      - ./backend:/var/www/html/backend
+      - ./dist:/var/www/html/dist
+    environment:
+      - APP_ENV=production
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - pontofacil
+
+  scheduler:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile.prod
+    container_name: ponto-facil-scheduler
+    restart: unless-stopped
+    working_dir: /var/www/html/backend
+    volumes:
+      - ./backend:/var/www/html/backend
+    command: sh -c "while true; do php artisan schedule:run; sleep 60; done"
+    depends_on:
+      - app
+    networks:
+      - pontofacil
+
+  queue:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile.prod
+    container_name: ponto-facil-queue
+    restart: unless-stopped
+    working_dir: /var/www/html/backend
+    volumes:
+      - ./backend:/var/www/html/backend
+    command: php artisan queue:work --sleep=3 --tries=3
+    depends_on:
+      - app
+    networks:
+      - pontofacil
+
+  nginx:
+    image: nginx:alpine
+    container_name: ponto-facil-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./backend:/var/www/html/backend
+      - ./dist:/var/www/html/dist
+      - ./docker/nginx/active.conf:/etc/nginx/conf.d/default.conf
+      - ./docker/certbot/conf:/etc/letsencrypt
+      - ./docker/certbot/www:/var/www/certbot
+    depends_on:
+      - app
+    networks:
+      - pontofacil
+
+  certbot:
+    image: certbot/certbot
+    container_name: ponto-facil-certbot
+    volumes:
+      - ./docker/certbot/conf:/etc/letsencrypt
+      - ./docker/certbot/www:/var/www/certbot
+    entrypoint: /bin/sh -c "trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;"
+    networks:
+      - pontofacil
+
+  mysql:
+    image: mysql:8
+    container_name: ponto-facil-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: pontofacil
+      MYSQL_USER: pontofacil
+      MYSQL_PASSWORD: secret
+      MYSQL_ROOT_PASSWORD: root
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - pontofacil
+
+  redis:
+    image: redis:alpine
+    container_name: ponto-facil-redis
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - pontofacil
+
+  node:
+    image: node:22-alpine
+    container_name: ponto-facil-node
+    working_dir: /app
+    volumes:
+      - .:/app
+
+networks:
+  pontofacil:
+    driver: bridge
+
+volumes:
+  mysql_data:
