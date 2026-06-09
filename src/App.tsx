@@ -252,9 +252,6 @@ export default function App() {
     dataMode,
   }
 
-  const demoEmployee = employees.find(e => e.profile === 'employee')
-  const demoAdmin = employees.find(e => e.profile === 'admin')
-
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -285,36 +282,6 @@ export default function App() {
       {view === 'admin' && currentEmployee && (
         <AdminPanel currentAdmin={currentEmployee} {...sharedProps} />
       )}
-
-      {/* Navegador rápido demo */}
-      <div className="fixed bottom-4 left-4 z-50">
-        <div className="glass-card px-3 py-2 flex items-center gap-1 text-xs">
-          {dataMode === 'api' && (
-            <span className="badge-success mr-1">API</span>
-          )}
-          {(
-            [
-              { label: 'landing', v: 'landing' as AppView, emp: null },
-              { label: 'login', v: 'login' as AppView, emp: null },
-              { label: 'funcionário', v: 'employee' as AppView, emp: demoEmployee ?? null },
-              { label: 'admin', v: 'admin' as AppView, emp: demoAdmin ?? null },
-            ]
-          ).map(({ label, v, emp }) => (
-            <button
-              key={v}
-              onClick={() => {
-                if (emp) setCurrentEmployee(emp)
-                setView(v)
-              }}
-              className={`px-2 py-1 rounded-lg transition-all duration-200 ${
-                view === v ? 'bg-[#1a7a4a] text-white' : 'text-slate-400 hover:text-white hover:bg-white/10'
-              }`}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-      </div>
 
       <ToastContainer toasts={toasts} onRemove={removeToast} />
     </>
