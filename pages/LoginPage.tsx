@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Clock, Eye, EyeOff, Shield, ArrowLeft, User, Zap } from 'lucide-react'
+import { Clock, Eye, EyeOff, Shield, ArrowLeft, User } from 'lucide-react'
 import type { Employee } from '../types'
 import { authService } from '../services/authService'
 
@@ -16,9 +16,6 @@ export default function LoginPage({ employees, onLoginSuccess, onBack }: LoginPa
   const [isAdmin, setIsAdmin] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-
-  const demoEmployee = employees.find((e) => e.profile === 'employee')
-  const demoAdmin = employees.find((e) => e.profile === 'admin')
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -47,13 +44,6 @@ export default function LoginPage({ employees, onLoginSuccess, onBack }: LoginPa
 
     setLoading(false)
     onLoginSuccess(found, false)
-  }
-
-  const fillDemo = (emp: Employee) => {
-    setEmail(emp.email)
-    setPassword('123456')
-    setIsAdmin(emp.profile === 'admin')
-    setError('')
   }
 
   return (
@@ -180,65 +170,6 @@ export default function LoginPage({ employees, onLoginSuccess, onBack }: LoginPa
             </form>
           </div>
 
-          {/* Atalhos de demonstração */}
-          <div className="glass-card-darker p-5">
-            <div className="flex items-center gap-2 mb-4">
-              <Zap className="w-4 h-4 text-[#4ade80]" />
-              <span className="text-sm font-medium text-slate-300">Acesso rápido para demonstração</span>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              {demoEmployee && (
-                <div className="bg-white/5 border border-white/10 rounded-xl p-3">
-                  <div className="flex items-center gap-2 mb-2">
-                    <img
-                      src={demoEmployee.avatar}
-                      alt={demoEmployee.name}
-                      className="w-8 h-8 rounded-full"
-                    />
-                    <div className="min-w-0">
-                      <div className="text-xs font-medium text-white truncate">{demoEmployee.name}</div>
-                      <div className="text-xs text-slate-500 truncate">{demoEmployee.role}</div>
-                    </div>
-                  </div>
-                  <div className="text-xs text-slate-500 mb-2 truncate">{demoEmployee.email}</div>
-                  <button
-                    onClick={() => fillDemo(demoEmployee)}
-                    className="w-full text-xs bg-[#1a7a4a]/30 hover:bg-[#1a7a4a]/50 text-[#4ade80] py-1.5 rounded-lg transition-colors duration-200"
-                  >
-                    Preencher
-                  </button>
-                </div>
-              )}
-
-              {demoAdmin && (
-                <div className="bg-white/5 border border-white/10 rounded-xl p-3">
-                  <div className="flex items-center gap-2 mb-2">
-                    <img
-                      src={demoAdmin.avatar}
-                      alt={demoAdmin.name}
-                      className="w-8 h-8 rounded-full"
-                    />
-                    <div className="min-w-0">
-                      <div className="text-xs font-medium text-white truncate">{demoAdmin.name}</div>
-                      <div className="text-xs text-slate-500 truncate">{demoAdmin.role}</div>
-                    </div>
-                  </div>
-                  <div className="text-xs text-slate-500 mb-2 truncate">{demoAdmin.email}</div>
-                  <button
-                    onClick={() => fillDemo(demoAdmin)}
-                    className="w-full text-xs bg-purple-600/30 hover:bg-purple-600/50 text-purple-400 py-1.5 rounded-lg transition-colors duration-200"
-                  >
-                    Preencher
-                  </button>
-                </div>
-              )}
-            </div>
-
-            <p className="text-xs text-slate-500 text-center mt-3">
-              Senha de demonstração: <span className="text-slate-300 font-mono">123456</span>
-            </p>
-          </div>
         </div>
       </div>
     </div>
