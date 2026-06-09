@@ -14,6 +14,7 @@ import { alertService } from '../services/alertService'
 import { convenioService } from '../services/convenioService'
 import LandingPage from '../pages/LandingPage'
 import LoginPage from '../pages/LoginPage'
+import RegisterPage from '../pages/RegisterPage'
 import EmployeePanel from '../pages/employee/EmployeePanel'
 import AdminPanel from '../pages/admin/AdminPanel'
 import ToastContainer from '../components/ui/Toast'
@@ -265,13 +266,26 @@ export default function App() {
 
   return (
     <>
-      {view === 'landing' && <LandingPage onLogin={() => setView('login')} />}
+      {view === 'landing' && (
+        <LandingPage
+          onLogin={() => setView('login')}
+          onRegister={() => setView('register')}
+        />
+      )}
+
+      {view === 'register' && (
+        <RegisterPage
+          onSuccess={(emp) => handleLoginSuccess(emp, true)}
+          onBack={() => setView('landing')}
+        />
+      )}
 
       {view === 'login' && (
         <LoginPage
           employees={employees}
           onLoginSuccess={handleLoginSuccess}
           onBack={() => setView('landing')}
+          onRegister={() => setView('register')}
         />
       )}
 

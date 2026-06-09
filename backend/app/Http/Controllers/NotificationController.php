@@ -12,41 +12,45 @@ class NotificationController extends Controller
 {
     public function __construct(private WhatsAppService $whatsapp) {}
 
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
+        $companyId   = $request->user()->company_id;
+        $employeeIds = Employee::where('company_id', $companyId)->pluck('id');
+
         return response()->json(
-            NotificationLog::orderByDesc('created_at')->get()
+            NotificationLog::whereIn('employee_id', $employeeIds)
+                ->orderByDesc('created_at')
+                ->get()
         );
     }
 
     public function send(Request $request): JsonResponse
     {
         $request->validate([
-            'employee_ids' => 'required|array',
+            'employee_ids'   => 'required|array',
             'employee_ids.*' => 'exists:employees,id',
-            'message' => 'required|string|max:1000',
-            'type' => 'nullable|in:entrada,almoco,retorno,saida,alerta',
+            'message'        => 'required|string|max:1000',
+            'type'           => 'nullable|in:entrada,almoco,retorno,saida,alerta',
         ]);
 
+        $companyId = $request->user()->company_id;
         $logs = [];
+
         foreach ($request->employee_ids as $empId) {
-            $employee = Employee::find($empId);
+            $employee = Employee::where('id', $empId)->where('company_id', $companyId)->first();
             if (! $employee) continue;
 
-            $status = $this->whatsapp->send($employee->phone, $request->message)
-                ? 'enviado'
-                : 'falha';
+            $status = $this->whatsapp->send($employee->phone, $request->message) ? 'enviado' : 'falha';
 
-            $log = NotificationLog::create([
-                'employee_id' => $employee->id,
+            $logs[] = NotificationLog::create([
+                'company_id'    => $companyId,
+                'employee_id'   => $employee->id,
                 'employee_name' => $employee->name,
-                'phone' => $employee->phone,
-                'message' => $request->message,
-                'type' => $request->type ?? 'alerta',
-                'status' => $status,
+                'phone'         => $employee->phone,
+                'message'       => $request->message,
+                'type'          => $request->type ?? 'alerta',
+                'status'        => $status,
             ]);
-
-            $logs[] = $log;
         }
 
         return response()->json($logs, 201);

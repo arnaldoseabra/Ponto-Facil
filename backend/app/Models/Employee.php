@@ -13,7 +13,7 @@ class Employee extends Authenticatable
     use HasApiTokens, HasFactory, Notifiable, SoftDeletes;
 
     protected $fillable = [
-        'name', 'cpf', 'rg', 'birth_date', 'email', 'phone', 'password',
+        'company_id', 'name', 'cpf', 'rg', 'birth_date', 'email', 'phone', 'password',
         'role', 'department', 'salary', 'weekly_hours', 'admission_date',
         'emergency_contact_name', 'emergency_contact_phone',
         'gps_lat', 'gps_lng', 'gps_radius',
@@ -35,6 +35,11 @@ class Employee extends Authenticatable
             'birth_date' => 'date',
             'admission_date' => 'date',
         ];
+    }
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
     }
 
     public function timeRecords()

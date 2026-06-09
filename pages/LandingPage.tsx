@@ -1,10 +1,18 @@
-import { MapPin, Clock, AlertTriangle, BarChart3, CheckCircle, Zap, Shield, Bell } from 'lucide-react'
+import { MapPin, Clock, AlertTriangle, BarChart3, CheckCircle, Zap, Shield, Bell, Users } from 'lucide-react'
 
 interface LandingPageProps {
   onLogin: () => void
+  onRegister: () => void
 }
 
-export default function LandingPage({ onLogin }: LandingPageProps) {
+const PLANS = [
+  { name: 'Free', price: 'Grátis', max: 'até 2 funcionários', highlight: false },
+  { name: 'Basic', price: 'R$ 39,90/mês', max: 'até 10 funcionários', highlight: false },
+  { name: 'Premium', price: 'R$ 99,90/mês', max: 'até 50 funcionários', highlight: true },
+  { name: 'Enterprise', price: 'R$ 299,90/mês', max: 'Ilimitado', highlight: false },
+]
+
+export default function LandingPage({ onLogin, onRegister }: LandingPageProps) {
   return (
     <div className="min-h-screen">
       {/* Header */}
@@ -18,12 +26,14 @@ export default function LandingPage({ onLogin }: LandingPageProps) {
               Ponto <span className="text-[#4ade80]">Fácil</span>
             </span>
           </div>
-          <button
-            onClick={onLogin}
-            className="btn-primary py-2 px-5 text-sm"
-          >
-            Entrar na Plataforma
-          </button>
+          <div className="flex items-center gap-2">
+            <button onClick={onRegister} className="btn-secondary py-2 px-4 text-sm">
+              Criar conta
+            </button>
+            <button onClick={onLogin} className="btn-primary py-2 px-4 text-sm">
+              Entrar
+            </button>
+          </div>
         </div>
       </header>
 
@@ -46,15 +56,12 @@ export default function LandingPage({ onLogin }: LandingPageProps) {
                 CLT em tempo real.
               </p>
 
-              <div className="flex flex-wrap gap-4 mb-10">
-                <button onClick={onLogin} className="btn-primary text-base">
+                      <div className="flex flex-wrap gap-4 mb-10">
+                <button onClick={onRegister} className="btn-primary text-base">
                   Começar agora
                 </button>
-                <button
-                  onClick={onLogin}
-                  className="btn-secondary text-base"
-                >
-                  Ver demonstração
+                <button onClick={onLogin} className="btn-secondary text-base">
+                  Já tenho conta
                 </button>
               </div>
 
@@ -237,6 +244,51 @@ export default function LandingPage({ onLogin }: LandingPageProps) {
         </div>
       </section>
 
+      {/* Preços */}
+      <section className="py-20 px-4">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-14">
+            <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">Planos e Preços</h2>
+            <p className="text-slate-400 text-lg">Comece grátis. Escale conforme sua empresa cresce.</p>
+          </div>
+
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {PLANS.map((plan) => (
+              <div
+                key={plan.name}
+                className={`glass-card p-6 flex flex-col relative ${
+                  plan.highlight ? 'border-[#1a7a4a] bg-[#1a7a4a]/10 ring-1 ring-[#1a7a4a]' : ''
+                }`}
+              >
+                {plan.highlight && (
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#1a7a4a] text-white text-xs px-3 py-1 rounded-full font-medium">
+                    Mais popular
+                  </div>
+                )}
+                <div className="mb-4">
+                  <div className="text-lg font-bold text-white">{plan.name}</div>
+                  <div className="text-2xl font-bold text-[#4ade80] mt-1">{plan.price}</div>
+                  <div className="text-xs text-slate-400 mt-1 flex items-center gap-1">
+                    <Users className="w-3 h-3" />
+                    {plan.max}
+                  </div>
+                </div>
+                <button
+                  onClick={onRegister}
+                  className={`mt-auto w-full py-2.5 rounded-xl text-sm font-medium transition-all duration-300 ${
+                    plan.highlight
+                      ? 'btn-primary'
+                      : 'btn-secondary'
+                  }`}
+                >
+                  {plan.name === 'Free' ? 'Começar grátis' : 'Assinar'}
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* CTA Final */}
       <section className="py-20 px-4">
         <div className="max-w-3xl mx-auto text-center">
@@ -249,8 +301,8 @@ export default function LandingPage({ onLogin }: LandingPageProps) {
               Acesse a demonstração gratuita e veja como o Ponto Fácil pode transformar a gestão
               de jornada da sua empresa.
             </p>
-            <button onClick={onLogin} className="btn-primary text-base px-8">
-              Acessar demonstração gratuita
+            <button onClick={onRegister} className="btn-primary text-base px-8">
+              Criar conta gratuita
             </button>
           </div>
         </div>

@@ -6,66 +6,78 @@ use App\Models\Employee;
 use App\Models\TimeRecord;
 use App\Models\CLTAlert;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 
 class DashboardController extends Controller
 {
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
+        $companyId = $request->user()->company_id;
         $month = now()->month;
-        $year = now()->year;
+        $year  = now()->year;
 
-        $monthRecords = TimeRecord::whereMonth('date', $month)->whereYear('date', $year)->get();
+        $employeeIds = Employee::where('company_id', $companyId)->pluck('id');
+
+        $monthRecords = TimeRecord::whereIn('employee_id', $employeeIds)
+            ->whereMonth('date', $month)
+            ->whereYear('date', $year)
+            ->get();
 
         return response()->json([
             'kpis' => [
-                'total_employees' => Employee::where('status', true)->where('profile', 'employee')->count(),
+                'total_employees' => Employee::where('company_id', $companyId)->where('profile', 'employee')->where('status', true)->count(),
                 'total_extra_hours' => $monthRecords->sum('extra_hours'),
-                'total_delays' => $monthRecords->where('status', 'atraso')->count(),
-                'total_absences' => $monthRecords->where('status', 'falta')->count(),
+                'total_delays'      => $monthRecords->where('status', 'atraso')->count(),
+                'total_absences'    => $monthRecords->where('status', 'falta')->count(),
             ],
             'recent_records' => TimeRecord::with('employee')
+                ->whereIn('employee_id', $employeeIds)
                 ->orderByDesc('date')
                 ->limit(8)
                 ->get(),
-            'clt_alerts' => CLTAlert::orderByDesc('created_at')->limit(10)->get(),
-            'chart_data' => $this->getChartData($month, $year),
+            'clt_alerts' => CLTAlert::whereIn('employee_id', $employeeIds)
+                ->orderByDesc('created_at')
+                ->limit(10)
+                ->get(),
+            'chart_data' => $this->getChartData($employeeIds->toArray(), $month, $year),
         ]);
     }
 
-    public function rankings(): JsonResponse
+    public function rankings(Request $request): JsonResponse
     {
-        $employees = Employee::where('status', true)->where('profile', 'employee')->get();
+        $companyId = $request->user()->company_id;
+        $employees = Employee::where('company_id', $companyId)->where('profile', 'employee')->where('status', true)->get();
 
         $data = $employees->map(function ($emp) {
             $records = $emp->timeRecords()->get();
             return [
-                'employee' => $emp,
-                'extra_hours' => $records->sum('extra_hours'),
-                'delays' => $records->where('status', 'atraso')->count(),
-                'delay_minutes' => $records->sum('delay_minutes'),
-                'absences' => $records->where('status', 'falta')->count(),
+                'employee'     => $emp,
+                'extra_hours'  => round($records->sum('extra_hours'), 1),
+                'delays'       => $records->where('status', 'atraso')->count(),
+                'delay_minutes'=> $records->sum('delay_minutes'),
+                'absences'     => $records->where('status', 'falta')->count(),
             ];
         });
 
         return response()->json([
-            'extras' => $data->sortByDesc('extra_hours')->values(),
-            'delays' => $data->sortByDesc('delays')->values(),
+            'extras'   => $data->sortByDesc('extra_hours')->values(),
+            'delays'   => $data->sortByDesc('delays')->values(),
             'absences' => $data->sortByDesc('absences')->values(),
         ]);
     }
 
-    private function getChartData(int $month, int $year): array
+    private function getChartData(array $employeeIds, int $month, int $year): array
     {
         $days = [];
         $daysInMonth = Carbon::createFromDate($year, $month)->daysInMonth;
 
         for ($d = 1; $d <= min($daysInMonth, 7); $d++) {
             $date = sprintf('%04d-%02d-%02d', $year, $month, $d);
-            $dayRecords = TimeRecord::where('date', $date)->get();
+            $dayRecords = TimeRecord::whereIn('employee_id', $employeeIds)->where('date', $date)->get();
             $days[] = [
-                'day' => "Jun/{$d}",
-                'horas' => round($dayRecords->sum(fn ($r) => $this->workedHours($r)), 1),
+                'day'    => "Dia {$d}",
+                'horas'  => round($dayRecords->sum(fn ($r) => $this->workedHours($r)), 1),
                 'extras' => round($dayRecords->sum('extra_hours'), 1),
             ];
         }

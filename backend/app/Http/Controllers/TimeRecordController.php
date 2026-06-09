@@ -16,22 +16,18 @@ class TimeRecordController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        $query = TimeRecord::with('employee')->orderByDesc('date');
+        $companyId = $request->user()->company_id;
 
-        if ($request->employee_id) {
-            $query->where('employee_id', $request->employee_id);
-        }
-        if ($request->date_start) {
-            $query->where('date', '>=', $request->date_start);
-        }
-        if ($request->date_end) {
-            $query->where('date', '<=', $request->date_end);
-        }
-        if ($request->status) {
-            $query->where('status', $request->status);
-        }
+        $records = TimeRecord::with('employee')
+            ->whereHas('employee', fn ($q) => $q->where('company_id', $companyId))
+            ->when($request->employee_id, fn ($q) => $q->where('employee_id', $request->employee_id))
+            ->when($request->date_start, fn ($q) => $q->where('date', '>=', $request->date_start))
+            ->when($request->date_end, fn ($q) => $q->where('date', '<=', $request->date_end))
+            ->when($request->status, fn ($q) => $q->where('status', $request->status))
+            ->orderByDesc('date')
+            ->get();
 
-        return response()->json(TimeRecordResource::collection($query->get()));
+        return response()->json(TimeRecordResource::collection($records));
     }
 
     public function store(TimeRecordRequest $request): JsonResponse
@@ -76,15 +72,15 @@ class TimeRecordController extends Controller
     public function punch(Request $request): JsonResponse
     {
         $request->validate([
-            'type' => 'required|in:entrada,inicio_almoco,retorno_almoco,saida',
-            'gps_lat' => 'nullable|numeric',
-            'gps_lng' => 'nullable|numeric',
+            'type'          => 'required|in:entrada,inicio_almoco,retorno_almoco,saida',
+            'gps_lat'       => 'nullable|numeric',
+            'gps_lng'       => 'nullable|numeric',
             'location_name' => 'nullable|string',
         ]);
 
         $employee = $request->user();
-        $today = now()->toDateString();
-        $time = now()->toTimeString();
+        $today    = now()->toDateString();
+        $time     = now()->toTimeString();
 
         $record = TimeRecord::firstOrCreate(
             ['employee_id' => $employee->id, 'date' => $today],
@@ -92,9 +88,9 @@ class TimeRecordController extends Controller
         );
 
         $record->update([
-            $request->type => $time,
-            'gps_lat' => $request->gps_lat,
-            'gps_lng' => $request->gps_lng,
+            $request->type  => $time,
+            'gps_lat'       => $request->gps_lat,
+            'gps_lng'       => $request->gps_lng,
             'location_name' => $request->location_name,
         ]);
 
@@ -102,6 +98,6 @@ class TimeRecordController extends Controller
             $this->cltService->calculateHours($record);
         }
 
-        return response()->json(new TimeRecordResource($record));
+        return response()->json(new TimeRecordResource($record->fresh()));
     }
 }

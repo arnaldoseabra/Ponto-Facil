@@ -78,7 +78,27 @@ export interface NotificationConfig {
   saida: { enabled: boolean; time: string };
 }
 
-export type AppView = 'landing' | 'login' | 'employee' | 'admin';
+export type Plan = 'free' | 'basic' | 'premium' | 'enterprise';
+
+export interface Company {
+  id: string;
+  name: string;
+  cnpj?: string;
+  email: string;
+  phone?: string;
+  plan: Plan;
+  status: 'active' | 'inactive' | 'suspended';
+}
+
+export interface PlanInfo {
+  name: string;
+  maxEmployees: number | null;
+  price: number;
+  employeeCount: number;
+  canAdd: boolean;
+}
+
+export type AppView = 'landing' | 'login' | 'register' | 'employee' | 'admin';
 export type ToastType = 'success' | 'error' | 'info' | 'warning';
 
 export interface Toast {

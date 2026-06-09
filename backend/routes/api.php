@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\TimeRecordController;
 use App\Http\Controllers\DashboardController;
@@ -10,10 +11,16 @@ use App\Http\Controllers\ConvenioController;
 use App\Http\Controllers\CLTAlertController;
 
 Route::post('/login', [AuthController::class, 'login']);
+Route::post('/companies/register', [CompanyController::class, 'register']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/me', [AuthController::class, 'me']);
+
+    // Empresa
+    Route::get('/company', [CompanyController::class, 'show']);
+    Route::put('/company', [CompanyController::class, 'update']);
+    Route::patch('/company/plan', [CompanyController::class, 'changePlan']);
 
     // Funcionários
     Route::apiResource('employees', EmployeeController::class);

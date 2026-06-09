@@ -7,9 +7,10 @@ interface LoginPageProps {
   employees: Employee[]
   onLoginSuccess: (employee: Employee, fromApi?: boolean) => void
   onBack: () => void
+  onRegister: () => void
 }
 
-export default function LoginPage({ employees, onLoginSuccess, onBack }: LoginPageProps) {
+export default function LoginPage({ employees, onLoginSuccess, onBack, onRegister }: LoginPageProps) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -160,13 +161,16 @@ export default function LoginPage({ employees, onLoginSuccess, onBack }: LoginPa
                 )}
               </button>
 
-              <button
-                type="button"
-                className="w-full text-center text-sm text-slate-400 hover:text-white transition-colors duration-200 py-1"
-                onClick={() => {}}
-              >
+              <button type="button" className="w-full text-center text-sm text-slate-400 hover:text-white transition-colors duration-200 py-1" onClick={() => {}}>
                 Esqueci minha senha
               </button>
+
+              <div className="text-center text-sm text-slate-400">
+                Não tem conta?{' '}
+                <button type="button" onClick={onRegister} className="text-[#4ade80] hover:text-white font-medium transition-colors">
+                  Criar conta grátis
+                </button>
+              </div>
             </form>
           </div>
 
